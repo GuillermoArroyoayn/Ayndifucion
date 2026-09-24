@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-title" content="A&N">
 <title>A&N Difusión</title>
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="./icon.svg?v=3">
-<link rel="shortcut icon" href="./icon.svg?v=3">
+<link rel="icon" type="image/svg+xml" href="./icon.svg?v=4">
+<link rel="shortcut icon" href="./icon.svg?v=4">
 <style>
 :root{--bg:#04101f;--card:#071b33;--cyan:#27d8ff;--cyan2:#84edff;--blue:#087cff;--deep:#063d8f;--text:#f5fcff;--muted:#a9c9d8;--line:#17638a;--green:#20c96b;--danger:#ff416c}
 *{box-sizing:border-box}
@@ -34,15 +34,23 @@ textarea{min-height:110px}.photos{display:grid;grid-template-columns:repeat(2,1f
 .primary{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#001326;flex:1;box-shadow:0 5px 18px #27d8ff44}
 .secondary{background:#0d3c61;color:white;border:1px solid #1b7ead}
 .networks{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
-.network{padding:11px;border:1px solid #1c7098;border-radius:12px;color:#e8faff;background:#082640}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--cyan);margin-right:7px;box-shadow:0 0 8px var(--cyan)}
+.network{position:relative;display:flex;align-items:center;gap:9px;padding:13px 11px;border:1px solid #1c7098;border-radius:12px;color:#e8faff;background:#082640;cursor:pointer;user-select:none;font-weight:750}
+.network input{position:absolute;opacity:0;pointer-events:none}
+.network .check{width:22px;height:22px;border:2px solid #58c9ef;border-radius:6px;display:grid;place-items:center;flex:0 0 auto;background:#03182b}
+.network.selected{border-color:var(--cyan);background:#0a4166;box-shadow:0 0 0 2px #27d8ff33}
+.network.selected .check{background:var(--cyan);border-color:var(--cyan);color:#002038}
+.network.selected .check::after{content:'✓';font-weight:1000}
+.network:focus-within{outline:3px solid #84edff66;outline-offset:2px}
+.selection{font-size:13px;color:var(--cyan2);margin:10px 0 0;font-weight:700}
+.shareNote{display:none;margin-top:12px;padding:11px;border-radius:12px;background:#062b46;border:1px solid #2188b2;color:#dff9ff;line-height:1.4}
+.shareNote.show{display:block}
 .wa{position:fixed;right:20px;bottom:24px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#25d366;color:white;font-weight:900;text-decoration:none;box-shadow:0 8px 24px #0008}
 .hint{font-size:13px;color:var(--muted);line-height:1.45}.status{display:none;margin-top:12px;color:#8df0b3}
 </style>
 </head>
 <body>
 <main>
-<header class="brand"><img class="logo" src="./icon.svg?v=3" alt="Logo oficial A&N Producciones"><div><h1>A&N Difusión</h1><div class="sub">Eventos que dejan recuerdos</div></div></header>
+<header class="brand"><img class="logo" src="./icon.svg?v=4" alt="Logo oficial A&N Producciones"><div><h1>A&N Difusión</h1><div class="sub">Eventos que dejan recuerdos</div></div></header>
 <section class="card">
 <label for="title">Título de la publicación</label><input id="title" placeholder="Ej.: Fiesta total A&N">
 <label for="text">Texto</label><textarea id="text" placeholder="Escribe aquí tu promoción..."></textarea>
@@ -51,11 +59,21 @@ textarea{min-height:110px}.photos{display:grid;grid-template-columns:repeat(2,1f
 <div id="photos" class="photos"></div>
 <p class="photoHelp">Toca un espacio para abrir tu galería. Toca una foto para cambiarla o usa × para eliminarla.</p>
 </section>
-<section class="card"><b>Difusión</b><div class="networks"><div class="network"><i class="dot"></i>Facebook</div><div class="network"><i class="dot"></i>Instagram</div><div class="network"><i class="dot"></i>TikTok · conectar</div><div class="network"><i class="dot"></i>Marketplace · asistido</div></div><p class="hint">Compartir abre las aplicaciones disponibles en tu teléfono con el texto y las imágenes preparadas.</p><div class="row"><button id="save" class="btn secondary">Guardar</button><button id="share" class="btn primary">Compartir publicación</button></div><div id="status" class="status">Borrador guardado en este teléfono.</div></section>
+<section class="card"><b>¿Dónde quieres publicar?</b>
+<div class="networks" id="networks">
+<label class="network"><input type="checkbox" value="Facebook"><span class="check"></span><span>Facebook</span></label>
+<label class="network"><input type="checkbox" value="Instagram"><span class="check"></span><span>Instagram</span></label>
+<label class="network"><input type="checkbox" value="TikTok"><span class="check"></span><span>TikTok</span></label>
+<label class="network"><input type="checkbox" value="Marketplace"><span class="check"></span><span>Marketplace</span></label>
+</div>
+<p id="selection" class="selection">Selecciona al menos una red social.</p>
+<p class="hint">La aplicación prepara las fotos y copia automáticamente la leyenda. Al abrir Facebook, toca el campo de texto y elige <b>Pegar</b> si Facebook no la muestra.</p>
+<div class="row"><button id="save" class="btn secondary">Guardar</button><button id="share" class="btn primary">Generar publicación</button></div>
+<div id="shareNote" class="shareNote" role="status"></div><div id="status" class="status">Borrador guardado en este teléfono.</div></section>
 </main>
 <a class="wa" href="https://wa.me/56985802197" aria-label="WhatsApp">WA</a>
 <script>
-const q=s=>document.querySelector(s),input=q('#files'),photos=q('#photos'),title=q('#title'),body=q('#text'),status=q('#status');
+const q=s=>document.querySelector(s),input=q('#files'),photos=q('#photos'),title=q('#title'),body=q('#text'),status=q('#status'),shareNote=q('#shareNote'),shareBtn=q('#share'),selection=q('#selection');
 let chosen=[null,null,null,null],pickAt=0,objectUrls=[];
 function clearUrls(){objectUrls.forEach(u=>URL.revokeObjectURL(u));objectUrls=[]}
 function render(){
@@ -76,9 +94,41 @@ function render(){
  }
 }
 input.onchange=()=>{if(input.files&&input.files[0]){chosen[pickAt]=input.files[0];render()}};
-q('#save').onclick=()=>{localStorage.setItem('aynDraft',JSON.stringify({title:title.value,text:body.value}));status.style.display='block'};
-q('#share').onclick=async()=>{const files=chosen.filter(Boolean),msg=(title.value?title.value+'\n\n':'')+body.value+'\n\nReservas: +56 9 8580 2197\nWhatsApp: https://wa.me/56985802197';try{if(navigator.share){const data={title:title.value||'A&N Producciones',text:msg};if(files.length&&(!navigator.canShare||navigator.canShare({files})))data.files=files;await navigator.share(data)}else{await navigator.clipboard.writeText(msg);alert('Texto copiado. Ya puedes pegarlo en tus redes.')}}catch(e){}};
-const saved=JSON.parse(localStorage.getItem('aynDraft')||'{}');title.value=saved.title||'';body.value=saved.text||'';render();
+const networkInputs=[...document.querySelectorAll('.network input')];
+function selectedNetworks(){return networkInputs.filter(n=>n.checked).map(n=>n.value)}
+function updateNetworks(){
+ networkInputs.forEach(n=>n.closest('.network').classList.toggle('selected',n.checked));
+ const names=selectedNetworks();selection.textContent=names.length?'Seleccionadas: '+names.join(', '):'Selecciona al menos una red social.';
+ shareBtn.textContent=names.length?'Generar y compartir ('+names.length+')':'Generar publicación';
+}
+networkInputs.forEach(n=>n.onchange=updateNetworks);
+function draft(){return {title:title.value,text:body.value,networks:selectedNetworks()}}
+q('#save').onclick=()=>{localStorage.setItem('aynDraft',JSON.stringify(draft()));status.style.display='block';setTimeout(()=>status.style.display='none',2500)};
+async function copyCaption(msg){
+ try{await navigator.clipboard.writeText(msg);return true}catch(e){
+  const t=document.createElement('textarea');t.value=msg;t.style.position='fixed';t.style.opacity='0';document.body.append(t);t.select();
+  const ok=document.execCommand('copy');t.remove();return ok;
+ }
+}
+shareBtn.onclick=async()=>{
+ const networks=selectedNetworks(),files=chosen.filter(Boolean);
+ if(!networks.length){shareNote.textContent='Primero selecciona una o más redes sociales.';shareNote.classList.add('show');return}
+ if(!title.value.trim()&&!body.value.trim()){shareNote.textContent='Escribe el título o la leyenda antes de generar la publicación.';shareNote.classList.add('show');return}
+ const msg=(title.value.trim()?title.value.trim()+'\n\n':'')+body.value.trim()+'\n\nReservas: +56 9 8580 2197\nWhatsApp: https://wa.me/56985802197';
+ localStorage.setItem('aynDraft',JSON.stringify(draft()));
+ const copied=await copyCaption(msg);
+ shareNote.innerHTML=(copied?'✓ Leyenda copiada. ':'')+'Publicación preparada para <b>'+networks.join(', ')+'</b>. En Facebook, si aparece solo la foto, toca el texto y elige <b>Pegar</b>.';
+ shareNote.classList.add('show');
+ try{
+  if(navigator.share){
+   const data={title:title.value.trim()||'A&N Producciones',text:msg};
+   if(files.length&&(!navigator.canShare||navigator.canShare({files})))data.files=files;
+   await navigator.share(data);
+  }else alert('La leyenda quedó copiada. Abre la red social, agrega las fotos y pega el texto.');
+ }catch(e){if(e.name!=='AbortError')shareNote.textContent='La publicación quedó preparada y la leyenda copiada. Abre la red social y pégala.'}
+};
+const saved=JSON.parse(localStorage.getItem('aynDraft')||'{}');title.value=saved.title||'';body.value=saved.text||'';
+networkInputs.forEach(n=>n.checked=(saved.networks||[]).includes(n.value));updateNetworks();render();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 </script>
 </body>
