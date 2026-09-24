@@ -1,5 +1,85 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07050d"><meta name="application-name" content="A&N Difusión"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="A&N"><title>A&N Difusión</title><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" type="image/svg+xml" href="./icon.svg"><link rel="shortcut icon" href="./icon.svg"><style>
-:root{--bg:#07050d;--card:#12101d;--gold:#ffc933;--gold2:#e7a91d;--violet:#8b35ff;--blue:#187bff;--text:#f8fafc;--muted:#a8a2bb;--line:#332a4c;--green:#20c96b}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 85% 2%,#43218366 0,transparent 32%),radial-gradient(circle at 0 25%,#084ba744 0,transparent 28%),linear-gradient(160deg,#050309,#100b1c 55%,#071325);color:var(--text);font:16px system-ui;min-height:100vh}main{max-width:620px;margin:auto;padding:22px 16px 110px}.brand{display:flex;align-items:center;gap:13px;margin-bottom:22px}.logo{width:62px;height:62px;border-radius:17px;background:linear-gradient(145deg,#17111f,#050309);border:1px solid #6e4b9d;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 22px #8738ff55,0 0 34px #087cff33;line-height:.86}.logo strong{font-family:Arial,sans-serif;font-size:22px;font-weight:900;color:#fff;text-shadow:0 1px 0 #aaa,0 0 10px #fff8}.logo small{font-size:7px;font-weight:900;letter-spacing:.6px;color:var(--gold);margin-top:7px}h1{font-size:22px;margin:0}.sub{color:var(--gold);font-size:13px;margin-top:3px}.card{background:#12101dee;border:1px solid var(--line);border-radius:20px;padding:17px;margin:14px 0;box-shadow:0 10px 32px #0006}label{display:block;font-weight:700;margin:12px 0 7px}input,textarea{width:100%;border:1px solid var(--line);background:#090711;color:white;border-radius:12px;padding:13px;font:inherit}textarea{min-height:110px}.photos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}.slot{aspect-ratio:1.35;border:1px dashed #745ba0;border-radius:14px;display:grid;place-items:center;overflow:hidden;color:var(--muted)}.slot img{width:100%;height:100%;object-fit:cover}.row{display:flex;gap:10px}.btn{border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15px}.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#090d18;flex:1;box-shadow:0 5px 18px #ffc93333}.secondary{background:#29203d;color:white}.networks{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}.network{padding:11px;border:1px solid var(--line);border-radius:12px;color:#e9e3f4}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:7px}.wa{position:fixed;right:20px;bottom:24px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#25d366;color:white;font-weight:900;text-decoration:none;box-shadow:0 8px 24px #0008}.hint{font-size:13px;color:var(--muted);line-height:1.45}.status{display:none;margin-top:12px;color:#8df0b3}
-</style></head><body><main><header class="brand"><div class="logo" aria-label="A&N Producciones"><strong>A&amp;N</strong><small>PRODUCCIONES</small></div><div><h1>A&N Difusión</h1><div class="sub">Eventos que dejan recuerdos</div></div></header><section class="card"><label for="title">Título de la publicación</label><input id="title" placeholder="Ej.: Fiesta total A&N"><label for="text">Texto</label><textarea id="text" placeholder="Escribe aquí tu promoción..."></textarea><label>Fotos (máximo 4)</label><input id="files" type="file" accept="image/*" multiple><div id="photos" class="photos"></div></section><section class="card"><b>Difusión</b><div class="networks"><div class="network"><i class="dot"></i>Facebook</div><div class="network"><i class="dot"></i>Instagram</div><div class="network">TikTok · conectar</div><div class="network">Marketplace · asistido</div></div><p class="hint">Compartir abre las aplicaciones disponibles en tu teléfono con el texto y las imágenes preparadas.</p><div class="row"><button id="save" class="btn secondary">Guardar</button><button id="share" class="btn primary">Compartir publicación</button></div><div id="status" class="status">Borrador guardado en este teléfono.</div></section></main><a class="wa" href="https://wa.me/56985802197" aria-label="WhatsApp">WA</a><script>
-const q=s=>document.querySelector(s),input=q('#files'),photos=q('#photos'),title=q('#title'),body=q('#text'),status=q('#status');let chosen=[];function render(){photos.innerHTML='';for(let i=0;i<4;i++){let d=document.createElement('div');d.className='slot';if(chosen[i]){let im=new Image;im.src=URL.createObjectURL(chosen[i]);d.append(im)}else d.textContent='+ Foto '+(i+1);photos.append(d)}}input.onchange=()=>{chosen=[...input.files].slice(0,4);render()};q('#save').onclick=()=>{localStorage.setItem('aynDraft',JSON.stringify({title:title.value,text:body.value}));status.style.display='block'};q('#share').onclick=async()=>{let msg=(title.value?title.value+'\n\n':'')+body.value+'\n\nReservas: +56 9 8580 2197\nWhatsApp: https://wa.me/56985802197';try{if(navigator.share)await navigator.share({title:title.value||'A&N Producciones',text:msg,files:chosen});else{await navigator.clipboard.writeText(msg);alert('Texto copiado. Ya puedes pegarlo en tus redes.')}}catch(e){}};let d=JSON.parse(localStorage.getItem('aynDraft')||'{}');title.value=d.title||'';body.value=d.text||'';render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
-</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06172e">
+<meta name="application-name" content="A&N Difusión">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="A&N">
+<title>A&N Difusión</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="./icon.svg?v=3">
+<link rel="shortcut icon" href="./icon.svg?v=3">
+<style>
+:root{--bg:#04101f;--card:#071b33;--cyan:#27d8ff;--cyan2:#84edff;--blue:#087cff;--deep:#063d8f;--text:#f5fcff;--muted:#a9c9d8;--line:#17638a;--green:#20c96b;--danger:#ff416c}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 85% 2%,#0e91ff55 0,transparent 34%),radial-gradient(circle at 0 28%,#20d9ff33 0,transparent 30%),linear-gradient(160deg,#020b16,#06172e 52%,#072c52);color:var(--text);font:16px system-ui;min-height:100vh}
+main{max-width:620px;margin:auto;padding:22px 16px 110px}
+.brand{display:flex;align-items:center;gap:13px;margin-bottom:22px}
+.logo{width:72px;height:72px;border-radius:18px;object-fit:cover;box-shadow:0 0 24px #27d8ff66;border:1px solid #4de3ff}
+h1{font-size:24px;margin:0}.sub{color:var(--cyan2);font-size:13px;margin-top:3px;font-weight:700}
+.card{background:#071b33ee;border:1px solid var(--line);border-radius:20px;padding:17px;margin:14px 0;box-shadow:0 10px 32px #0007,0 0 22px #087cff18}
+label{display:block;font-weight:700;margin:12px 0 7px}
+input,textarea{width:100%;border:1px solid var(--line);background:#031224;color:white;border-radius:12px;padding:13px;font:inherit}
+textarea{min-height:110px}.photos{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
+.slot{position:relative;aspect-ratio:1.35;border:2px dashed #299bc7;border-radius:14px;display:grid;place-items:center;overflow:hidden;color:var(--cyan2);background:#04182b;cursor:pointer}
+.slot:active{transform:scale(.985)}.slot img{width:100%;height:100%;object-fit:cover}
+.empty{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800}.empty b{font-size:30px;line-height:1;color:var(--cyan)}
+.change{position:absolute;left:8px;bottom:8px;background:#02213dcc;color:white;border:1px solid #56e7ff;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800}
+.remove{position:absolute;right:7px;top:7px;width:34px;height:34px;border:0;border-radius:50%;background:var(--danger);color:white;font-size:19px;font-weight:900;box-shadow:0 4px 12px #0008}
+.photoHelp{font-size:13px;color:var(--muted);margin:8px 0 0}
+.row{display:flex;gap:10px}.btn{border:0;border-radius:14px;padding:14px;font-weight:800;font-size:15px}
+.primary{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#001326;flex:1;box-shadow:0 5px 18px #27d8ff44}
+.secondary{background:#0d3c61;color:white;border:1px solid #1b7ead}
+.networks{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+.network{padding:11px;border:1px solid #1c7098;border-radius:12px;color:#e8faff;background:#082640}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--cyan);margin-right:7px;box-shadow:0 0 8px var(--cyan)}
+.wa{position:fixed;right:20px;bottom:24px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#25d366;color:white;font-weight:900;text-decoration:none;box-shadow:0 8px 24px #0008}
+.hint{font-size:13px;color:var(--muted);line-height:1.45}.status{display:none;margin-top:12px;color:#8df0b3}
+</style>
+</head>
+<body>
+<main>
+<header class="brand"><img class="logo" src="./icon.svg?v=3" alt="Logo oficial A&N Producciones"><div><h1>A&N Difusión</h1><div class="sub">Eventos que dejan recuerdos</div></div></header>
+<section class="card">
+<label for="title">Título de la publicación</label><input id="title" placeholder="Ej.: Fiesta total A&N">
+<label for="text">Texto</label><textarea id="text" placeholder="Escribe aquí tu promoción..."></textarea>
+<label>Fotos (máximo 4)</label>
+<input id="files" type="file" accept="image/*" hidden>
+<div id="photos" class="photos"></div>
+<p class="photoHelp">Toca un espacio para abrir tu galería. Toca una foto para cambiarla o usa × para eliminarla.</p>
+</section>
+<section class="card"><b>Difusión</b><div class="networks"><div class="network"><i class="dot"></i>Facebook</div><div class="network"><i class="dot"></i>Instagram</div><div class="network"><i class="dot"></i>TikTok · conectar</div><div class="network"><i class="dot"></i>Marketplace · asistido</div></div><p class="hint">Compartir abre las aplicaciones disponibles en tu teléfono con el texto y las imágenes preparadas.</p><div class="row"><button id="save" class="btn secondary">Guardar</button><button id="share" class="btn primary">Compartir publicación</button></div><div id="status" class="status">Borrador guardado en este teléfono.</div></section>
+</main>
+<a class="wa" href="https://wa.me/56985802197" aria-label="WhatsApp">WA</a>
+<script>
+const q=s=>document.querySelector(s),input=q('#files'),photos=q('#photos'),title=q('#title'),body=q('#text'),status=q('#status');
+let chosen=[null,null,null,null],pickAt=0,objectUrls=[];
+function clearUrls(){objectUrls.forEach(u=>URL.revokeObjectURL(u));objectUrls=[]}
+function render(){
+ clearUrls();photos.innerHTML='';
+ for(let i=0;i<4;i++){
+  const slot=document.createElement('div');slot.className='slot';slot.setAttribute('role','button');slot.setAttribute('aria-label',chosen[i]?'Cambiar foto '+(i+1):'Agregar foto '+(i+1));
+  slot.onclick=()=>{pickAt=i;input.value='';input.click()};
+  if(chosen[i]){
+   const url=URL.createObjectURL(chosen[i]);objectUrls.push(url);
+   const img=new Image;img.src=url;img.alt='Foto '+(i+1);slot.append(img);
+   const change=document.createElement('span');change.className='change';change.textContent='Cambiar';slot.append(change);
+   const remove=document.createElement('button');remove.className='remove';remove.type='button';remove.textContent='×';remove.setAttribute('aria-label','Eliminar foto '+(i+1));
+   remove.onclick=e=>{e.stopPropagation();chosen[i]=null;render()};slot.append(remove);
+  }else{
+   const empty=document.createElement('div');empty.className='empty';empty.innerHTML='<b>+</b><span>Foto '+(i+1)+'</span>';slot.append(empty);
+  }
+  photos.append(slot);
+ }
+}
+input.onchange=()=>{if(input.files&&input.files[0]){chosen[pickAt]=input.files[0];render()}};
+q('#save').onclick=()=>{localStorage.setItem('aynDraft',JSON.stringify({title:title.value,text:body.value}));status.style.display='block'};
+q('#share').onclick=async()=>{const files=chosen.filter(Boolean),msg=(title.value?title.value+'\n\n':'')+body.value+'\n\nReservas: +56 9 8580 2197\nWhatsApp: https://wa.me/56985802197';try{if(navigator.share){const data={title:title.value||'A&N Producciones',text:msg};if(files.length&&(!navigator.canShare||navigator.canShare({files})))data.files=files;await navigator.share(data)}else{await navigator.clipboard.writeText(msg);alert('Texto copiado. Ya puedes pegarlo en tus redes.')}}catch(e){}};
+const saved=JSON.parse(localStorage.getItem('aynDraft')||'{}');title.value=saved.title||'';body.value=saved.text||'';render();
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+</script>
+</body>
+</html>
