@@ -35,7 +35,7 @@ textarea{min-height:110px}.photos{display:grid;grid-template-columns:repeat(2,1f
 .secondary{background:#0d3c61;color:white;border:1px solid #1b7ead}
 .networks{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
 .network{position:relative;display:flex;align-items:center;gap:9px;padding:13px 11px;border:1px solid #1c7098;border-radius:12px;color:#e8faff;background:#082640;cursor:pointer;user-select:none;font-weight:750}
-.network input{position:absolute;opacity:0;pointer-events:none}
+.network input{position:absolute;opacity:0;width:1px;height:1px;inset:auto;pointer-events:none}
 .network .check{width:22px;height:22px;border:2px solid #58c9ef;border-radius:6px;display:grid;place-items:center;flex:0 0 auto;background:#03182b}
 .network.selected{border-color:var(--cyan);background:#0a4166;box-shadow:0 0 0 2px #27d8ff33}
 .network.selected .check{background:var(--cyan);border-color:var(--cyan);color:#002038}
@@ -44,6 +44,7 @@ textarea{min-height:110px}.photos{display:grid;grid-template-columns:repeat(2,1f
 .selection{font-size:13px;color:var(--cyan2);margin:10px 0 0;font-weight:700}
 .shareNote{display:none;margin-top:12px;padding:11px;border-radius:12px;background:#062b46;border:1px solid #2188b2;color:#dff9ff;line-height:1.4}
 .shareNote.show{display:block}
+.publishSteps{display:none;margin-top:13px;gap:9px}.publishSteps.show{display:grid}.publishStep{width:100%;border:1px solid #299bc7;border-radius:12px;padding:12px 13px;background:#073455;color:white;text-align:left;font-weight:800}.publishStep small{display:block;color:#bceeff;margin-top:4px;font-weight:600}.captionBox{display:none;margin-top:12px}.captionBox.show{display:block}.captionBox textarea{min-height:145px;background:#02101f}.copyBtn{width:100%;margin-top:8px;background:#0d3c61;color:white;border:1px solid #2ba4d2;border-radius:12px;padding:12px;font-weight:850}
 .wa{position:fixed;right:20px;bottom:24px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#25d366;color:white;font-weight:900;text-decoration:none;box-shadow:0 8px 24px #0008}
 .hint{font-size:13px;color:var(--muted);line-height:1.45}.status{display:none;margin-top:12px;color:#8df0b3}
 </style>
@@ -61,19 +62,21 @@ textarea{min-height:110px}.photos{display:grid;grid-template-columns:repeat(2,1f
 </section>
 <section class="card"><b>¿Dónde quieres publicar?</b>
 <div class="networks" id="networks">
-<label class="network"><input type="checkbox" value="Facebook"><span class="check"></span><span>Facebook</span></label>
-<label class="network"><input type="checkbox" value="Instagram"><span class="check"></span><span>Instagram</span></label>
-<label class="network"><input type="checkbox" value="TikTok"><span class="check"></span><span>TikTok</span></label>
-<label class="network"><input type="checkbox" value="Marketplace"><span class="check"></span><span>Marketplace</span></label>
+<button type="button" class="network" data-network="Facebook" aria-pressed="false"><span class="check"></span><span>Facebook</span></button>
+<button type="button" class="network" data-network="Instagram" aria-pressed="false"><span class="check"></span><span>Instagram</span></button>
+<button type="button" class="network" data-network="TikTok" aria-pressed="false"><span class="check"></span><span>TikTok</span></button>
+<button type="button" class="network" data-network="Marketplace" aria-pressed="false"><span class="check"></span><span>Marketplace</span></button>
 </div>
 <p id="selection" class="selection">Selecciona al menos una red social.</p>
-<p class="hint">La aplicación prepara las fotos y copia automáticamente la leyenda. Al abrir Facebook, toca el campo de texto y elige <b>Pegar</b> si Facebook no la muestra.</p>
+<p class="hint">Toca cada red para seleccionarla. La aplicación deja la leyenda copiada antes de abrir la ventana de compartir.</p>
 <div class="row"><button id="save" class="btn secondary">Guardar</button><button id="share" class="btn primary">Generar publicación</button></div>
-<div id="shareNote" class="shareNote" role="status"></div><div id="status" class="status">Borrador guardado en este teléfono.</div></section>
+<div id="shareNote" class="shareNote" role="status"></div>
+<div id="captionBox" class="captionBox"><label for="finalCaption">Leyenda lista para publicar</label><textarea id="finalCaption" readonly></textarea><button id="copyCaption" type="button" class="copyBtn">Copiar leyenda nuevamente</button></div>
+<div id="publishSteps" class="publishSteps"></div><div id="status" class="status">Borrador guardado en este teléfono.</div></section>
 </main>
 <a class="wa" href="https://wa.me/56985802197" aria-label="WhatsApp">WA</a>
 <script>
-const q=s=>document.querySelector(s),input=q('#files'),photos=q('#photos'),title=q('#title'),body=q('#text'),status=q('#status'),shareNote=q('#shareNote'),shareBtn=q('#share'),selection=q('#selection');
+const q=s=>document.querySelector(s),input=q('#files'),photos=q('#photos'),title=q('#title'),body=q('#text'),status=q('#status'),shareNote=q('#shareNote'),shareBtn=q('#share'),selection=q('#selection'),captionBox=q('#captionBox'),finalCaption=q('#finalCaption'),publishSteps=q('#publishSteps');
 let chosen=[null,null,null,null],pickAt=0,objectUrls=[];
 function clearUrls(){objectUrls.forEach(u=>URL.revokeObjectURL(u));objectUrls=[]}
 function render(){
@@ -94,14 +97,15 @@ function render(){
  }
 }
 input.onchange=()=>{if(input.files&&input.files[0]){chosen[pickAt]=input.files[0];render()}};
-const networkInputs=[...document.querySelectorAll('.network input')];
-function selectedNetworks(){return networkInputs.filter(n=>n.checked).map(n=>n.value)}
+const networkButtons=[...document.querySelectorAll('.network')];
+const selected=new Set;
+function selectedNetworks(){return networkButtons.map(n=>n.dataset.network).filter(n=>selected.has(n))}
 function updateNetworks(){
- networkInputs.forEach(n=>n.closest('.network').classList.toggle('selected',n.checked));
+ networkButtons.forEach(n=>{const active=selected.has(n.dataset.network);n.classList.toggle('selected',active);n.setAttribute('aria-pressed',String(active))});
  const names=selectedNetworks();selection.textContent=names.length?'Seleccionadas: '+names.join(', '):'Selecciona al menos una red social.';
  shareBtn.textContent=names.length?'Generar y compartir ('+names.length+')':'Generar publicación';
 }
-networkInputs.forEach(n=>n.onchange=updateNetworks);
+networkButtons.forEach(n=>n.onclick=()=>{const name=n.dataset.network;selected.has(name)?selected.delete(name):selected.add(name);updateNetworks()});
 function draft(){return {title:title.value,text:body.value,networks:selectedNetworks()}}
 q('#save').onclick=()=>{localStorage.setItem('aynDraft',JSON.stringify(draft()));status.style.display='block';setTimeout(()=>status.style.display='none',2500)};
 async function copyCaption(msg){
@@ -110,25 +114,31 @@ async function copyCaption(msg){
   const ok=document.execCommand('copy');t.remove();return ok;
  }
 }
+function makeCaption(){return (title.value.trim()?title.value.trim()+'\n\n':'')+body.value.trim()+'\n\nReservas: +56 9 8580 2197\nWhatsApp: https://wa.me/56985802197'}
+async function openShare(network,msg,files){
+ await copyCaption(msg);
+ shareNote.innerHTML='✓ Leyenda copiada. Ahora selecciona <b>'+network+'</b> en la ventana que se abrirá. Si la red muestra solo las fotos, mantén presionado el campo de texto y toca <b>Pegar</b>.';
+ try{
+  if(navigator.share){const data={title:title.value.trim()||'A&N Producciones',text:msg};if(files.length&&(!navigator.canShare||navigator.canShare({files})))data.files=files;await navigator.share(data)}
+  else{alert('La leyenda quedó copiada. Abre '+network+', agrega las fotos y pega el texto.')}
+ }catch(e){if(e.name!=='AbortError')shareNote.textContent='La leyenda quedó copiada. Abre '+network+' y pégala junto a las fotos.'}
+}
 shareBtn.onclick=async()=>{
  const networks=selectedNetworks(),files=chosen.filter(Boolean);
  if(!networks.length){shareNote.textContent='Primero selecciona una o más redes sociales.';shareNote.classList.add('show');return}
  if(!title.value.trim()&&!body.value.trim()){shareNote.textContent='Escribe el título o la leyenda antes de generar la publicación.';shareNote.classList.add('show');return}
- const msg=(title.value.trim()?title.value.trim()+'\n\n':'')+body.value.trim()+'\n\nReservas: +56 9 8580 2197\nWhatsApp: https://wa.me/56985802197';
+ const msg=makeCaption();
  localStorage.setItem('aynDraft',JSON.stringify(draft()));
  const copied=await copyCaption(msg);
- shareNote.innerHTML=(copied?'✓ Leyenda copiada. ':'')+'Publicación preparada para <b>'+networks.join(', ')+'</b>. En Facebook, si aparece solo la foto, toca el texto y elige <b>Pegar</b>.';
+ finalCaption.value=msg;captionBox.classList.add('show');
+ publishSteps.innerHTML='';networks.forEach(name=>{const b=document.createElement('button');b.type='button';b.className='publishStep';b.innerHTML='Publicar en '+name+'<small>Copia la leyenda y abre la ventana para compartir</small>';b.onclick=()=>openShare(name,msg,files);publishSteps.append(b)});publishSteps.classList.add('show');
+ shareNote.innerHTML=(copied?'✓ Leyenda copiada. ':'')+'La publicación está lista para <b>'+networks.join(', ')+'</b>. Usa los botones que aparecieron abajo, uno por cada red.';
  shareNote.classList.add('show');
- try{
-  if(navigator.share){
-   const data={title:title.value.trim()||'A&N Producciones',text:msg};
-   if(files.length&&(!navigator.canShare||navigator.canShare({files})))data.files=files;
-   await navigator.share(data);
-  }else alert('La leyenda quedó copiada. Abre la red social, agrega las fotos y pega el texto.');
- }catch(e){if(e.name!=='AbortError')shareNote.textContent='La publicación quedó preparada y la leyenda copiada. Abre la red social y pégala.'}
+ await openShare(networks[0],msg,files);
 };
+q('#copyCaption').onclick=async()=>{const ok=await copyCaption(finalCaption.value);q('#copyCaption').textContent=ok?'✓ Leyenda copiada':'No se pudo copiar';setTimeout(()=>q('#copyCaption').textContent='Copiar leyenda nuevamente',1800)};
 const saved=JSON.parse(localStorage.getItem('aynDraft')||'{}');title.value=saved.title||'';body.value=saved.text||'';
-networkInputs.forEach(n=>n.checked=(saved.networks||[]).includes(n.value));updateNetworks();render();
+(saved.networks||[]).forEach(n=>selected.add(n));updateNetworks();render();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 </script>
 </body>
