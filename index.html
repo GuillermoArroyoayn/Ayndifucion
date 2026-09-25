@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="A&N">
 <title>A&N Difusión</title>
-<link rel="manifest" href="./manifest.webmanifest">
+<link rel="manifest" href="./manifest.webmanifest?v=9">
 <link rel="icon" type="image/svg+xml" href="./icon.svg?v=4">
 <link rel="shortcut icon" href="./icon.svg?v=4">
 <style>
@@ -139,7 +139,11 @@ shareBtn.onclick=async()=>{
 q('#copyCaption').onclick=async()=>{const ok=await copyCaption(finalCaption.value);q('#copyCaption').textContent=ok?'✓ Leyenda copiada':'No se pudo copiar';setTimeout(()=>q('#copyCaption').textContent='Copiar leyenda nuevamente',1800)};
 const saved=JSON.parse(localStorage.getItem('aynDraft')||'{}');title.value=saved.title||'';body.value=saved.text||'';
 (saved.networks||[]).forEach(n=>selected.add(n));updateNetworks();render();
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+if('serviceWorker'in navigator){
+ let refreshing=false;
+ navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!refreshing){refreshing=true;location.reload()}});
+ navigator.serviceWorker.register('./sw.js?v=9',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
+}
 </script>
 </body>
 </html>

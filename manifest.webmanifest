@@ -3,7 +3,7 @@
   "name": "A&N Difusión",
   "short_name": "A&N",
   "description": "Campañas de A&N Producciones",
-  "start_url": "./",
+  "start_url": "./?app=v9",
   "scope": "./",
   "display": "standalone",
   "background_color": "#06172e",
